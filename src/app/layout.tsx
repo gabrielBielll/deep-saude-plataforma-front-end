@@ -1,11 +1,11 @@
-import type {Metadata} from 'next';
+
+'use client';
+
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
-export const metadata: Metadata = {
-  title: 'AgendaWise',
-  description: 'Smart scheduling and patient management for psychologists.',
-};
+import { SessionProvider } from 'next-auth/react';
+
 
 export default function RootLayout({
   children,
@@ -21,8 +21,10 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <SessionProvider>
+          {children}
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );

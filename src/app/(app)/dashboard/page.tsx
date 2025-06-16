@@ -75,7 +75,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-4">
           <Button asChild size="lg">
-            <Link href="/calendar?action=new">
+            <Link href="/calendar/new">
               <CalendarCheck className="mr-2 h-5 w-5" /> New Appointment
             </Link>
           </Button>

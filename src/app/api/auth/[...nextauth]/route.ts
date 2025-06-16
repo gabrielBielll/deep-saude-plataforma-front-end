@@ -1,5 +1,9 @@
 
 import NextAuth from "next-auth"
+
+console.log('NEXTAUTH_URL em produção:', process.env.NEXTAUTH_URL);
+console.log('NODE_ENV em produção:', process.env.NODE_ENV);
+console.log('VERCEL_URL (para referência, pode não ser relevante no Render):', process.env.VERCEL_URL);
 import GoogleProvider from "next-auth/providers/google"
 import type { AuthOptions } from "next-auth";
 

@@ -39,6 +39,14 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-const handler = NextAuth(authOptions);
+const baseHandler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST };
+export async function GET(request: Request, context: any) {
+  console.log('Manipulador de autenticação GET invocado');
+  return baseHandler(request, context);
+}
+
+export async function POST(request: Request, context: any) {
+  console.log('Manipulador de autenticação POST invocado');
+  return baseHandler(request, context);
+}

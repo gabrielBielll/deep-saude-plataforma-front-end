@@ -14,7 +14,7 @@ export default function CalendarPage() {
     // Placeholder for Google Calendar OAuth flow
     setIsSynced(true); 
     // In a real app, show a toast or confirmation
-    alert("Google Calendar sync initiated (mock).");
+    alert("Sincronização com Google Agenda iniciada (simulado).");
   };
   
   return (
@@ -23,28 +23,28 @@ export default function CalendarPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="font-headline text-3xl">My Calendar</CardTitle>
+              <CardTitle className="font-headline text-3xl">Meu Calendário</CardTitle>
               <CardDescription className="text-lg text-muted-foreground">
-                Manage your appointments and sync with Google Calendar.
+                Gerencie seus agendamentos e sincronize com o Google Agenda.
               </CardDescription>
             </div>
             <Button className="mt-4 sm:mt-0">
-              <PlusCircle className="mr-2 h-5 w-5" /> New Appointment
+              <PlusCircle className="mr-2 h-5 w-5" /> Novo Agendamento
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {!isSynced && (
             <div className="mb-6 p-4 bg-accent/20 border border-accent rounded-lg text-center">
-              <p className="text-accent-foreground mb-2">Your Google Calendar is not yet synced.</p>
+              <p className="text-accent-foreground mb-2">Seu Google Agenda ainda não está sincronizado.</p>
               <Button onClick={handleSyncGoogleCalendar} variant="default">
-                <ExternalLink className="mr-2 h-4 w-4" /> Sync with Google Calendar
+                <ExternalLink className="mr-2 h-4 w-4" /> Sincronizar com Google Agenda
               </Button>
             </div>
           )}
           {isSynced && (
              <div className="mb-6 p-4 bg-green-100 border border-green-600 text-green-700 rounded-lg text-center">
-              <p>Successfully synced with Google Calendar (mock).</p>
+              <p>Sincronizado com sucesso com o Google Agenda (simulado).</p>
             </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -68,15 +68,15 @@ export default function CalendarPage() {
               <Card className="shadow-md">
                 <CardHeader>
                   <CardTitle className="font-headline text-xl">
-                    Appointments for {date ? date.toLocaleDateString() : 'selected date'}
+                    Agendamentos para {date ? date.toLocaleDateString('pt-BR') : 'data selecionada'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {/* Placeholder for appointments list */}
                   <ul className="space-y-2">
-                    <li className="p-3 bg-secondary/50 rounded-md">10:00 AM - John Doe</li>
-                    <li className="p-3 bg-secondary/50 rounded-md">02:30 PM - Jane Smith</li>
-                    <li classNamep-3 text-muted-foreground>No more appointments today.</li>
+                    <li className="p-3 bg-secondary/50 rounded-md">10:00 - João Ninguém</li>
+                    <li className="p-3 bg-secondary/50 rounded-md">14:30 - Joana Silva</li>
+                    <li classNamep-3 text-muted-foreground>Não há mais agendamentos para hoje.</li>
                   </ul>
                 </CardContent>
               </Card>

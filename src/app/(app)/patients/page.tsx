@@ -54,14 +54,14 @@ export default function PatientsPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="font-headline text-3xl">Patient Directory</CardTitle>
+              <CardTitle className="font-headline text-3xl">Diretório de Pacientes</CardTitle>
               <CardDescription className="text-lg text-muted-foreground">
-                Manage your patient profiles, notes, and documents.
+                Gerencie os perfis, anotações e documentos de seus pacientes.
               </CardDescription>
             </div>
             <Button asChild className="mt-4 sm:mt-0">
               <Link href="/patients/new">
-                <PlusCircle className="mr-2 h-5 w-5" /> Add New Patient
+                <PlusCircle className="mr-2 h-5 w-5" /> Adicionar Novo Paciente
               </Link>
             </Button>
           </div>
@@ -71,7 +71,7 @@ export default function PatientsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search patients by name..."
+              placeholder="Pesquisar pacientes por nome..."
               className="pl-10 w-full md:w-1/2"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -89,12 +89,12 @@ export default function PatientsPage() {
                     </Avatar>
                     <div>
                       <CardTitle className="font-headline text-xl">{patient.name}</CardTitle>
-                      <CardDescription>Last Session: {patient.lastSession}</CardDescription>
+                      <CardDescription>Última Sessão: {new Date(patient.lastSession).toLocaleDateString('pt-BR')}</CardDescription>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
                     {/* Placeholder for more patient info if needed */}
-                    <p className="text-sm text-muted-foreground">Click to view detailed profile, session notes, and documents.</p>
+                    <p className="text-sm text-muted-foreground">Clique para ver perfil detalhado, notas de sessão e documentos.</p>
                   </CardContent>
                   <CardFooter className="flex justify-between items-center pt-4 border-t">
                      <div className="flex gap-2">
@@ -111,15 +111,15 @@ export default function PatientsPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the patient record for {patient.name}.
+                              Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro do paciente {patient.name}.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction onClick={() => handleDeletePatient(patient.id)}>
-                              Delete
+                              Excluir
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -127,7 +127,7 @@ export default function PatientsPage() {
                     </div>
                     <Button variant="default" size="sm" asChild>
                       <Link href={`/patients/${patient.id}`}>
-                        View Profile <ArrowRight className="ml-2 h-4 w-4" />
+                        Ver Perfil <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
                   </CardFooter>
@@ -137,10 +137,10 @@ export default function PatientsPage() {
           ) : (
             <div className="text-center py-10">
               <Leaf className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
-              <p className="font-headline text-xl text-muted-foreground">No patients found.</p>
+              <p className="font-headline text-xl text-muted-foreground">Nenhum paciente encontrado.</p>
               <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Try a different search term or " : ""}
-                <Link href="/patients/new" className="text-primary hover:underline">add a new patient</Link>.
+                {searchTerm ? "Tente um termo de pesquisa diferente ou " : ""}
+                <Link href="/patients/new" className="text-primary hover:underline">adicione um novo paciente</Link>.
               </p>
             </div>
           )}

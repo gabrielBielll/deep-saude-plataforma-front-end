@@ -18,8 +18,8 @@ export default function SettingsPage() {
     // Placeholder for OAuth flow
     setIsCalendarSynced(!isCalendarSynced);
     toast({
-      title: `Google Calendar ${!isCalendarSynced ? 'Sync Enabled' : 'Sync Disabled'} (Mock)`,
-      description: `Your calendar integration status has been updated.`,
+      title: `Sincronização com Google Agenda ${!isCalendarSynced ? 'Ativada' : 'Desativada'} (Simulado)`,
+      description: `O status da integração do seu calendário foi atualizado.`,
       className: "bg-primary text-primary-foreground"
     });
   };
@@ -27,8 +27,8 @@ export default function SettingsPage() {
   const handleSaveChanges = () => {
     // Placeholder for saving settings
     toast({
-      title: "Settings Saved (Mock)",
-      description: "Your preferences have been updated successfully.",
+      title: "Configurações Salvas (Simulado)",
+      description: "Suas preferências foram atualizadas com sucesso.",
       className: "bg-primary text-primary-foreground"
     });
   };
@@ -37,43 +37,43 @@ export default function SettingsPage() {
     <div className="space-y-8 max-w-3xl mx-auto">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="font-headline text-3xl">Application Settings</CardTitle>
+          <CardTitle className="font-headline text-3xl">Configurações do Aplicativo</CardTitle>
           <CardDescription className="text-lg text-muted-foreground">
-            Customize your AgendaWise experience.
+            Personalize sua experiência AgendaWise.
           </CardDescription>
         </CardHeader>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-xl flex items-center"><CalendarCog className="mr-2 h-6 w-6 text-primary" />Calendar Integration</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><CalendarCog className="mr-2 h-6 w-6 text-primary" />Integração com Calendário</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <Label htmlFor="google-calendar-sync" className="text-base font-medium">Google Calendar Sync</Label>
+              <Label htmlFor="google-calendar-sync" className="text-base font-medium">Sincronização com Google Agenda</Label>
               <p className="text-sm text-muted-foreground">
-                {isCalendarSynced ? "Your calendar is currently synced." : "Connect your Google Calendar to manage appointments."}
+                {isCalendarSynced ? "Seu calendário está sincronizado no momento." : "Conecte seu Google Agenda para gerenciar agendamentos."}
               </p>
             </div>
             <Button onClick={handleGoogleCalendarSync} variant={isCalendarSynced ? "outline" : "default"}>
               <ExternalLink className="mr-2 h-4 w-4" />
-              {isCalendarSynced ? 'Disconnect Google Calendar' : 'Connect Google Calendar'}
+              {isCalendarSynced ? 'Desconectar Google Agenda' : 'Conectar Google Agenda'}
             </Button>
           </div>
           {isCalendarSynced && (
             <Card className="bg-secondary/30 p-4">
               <CardHeader className="p-0 pb-2">
-                <CardTitle className="text-md">Sync Options</CardTitle>
+                <CardTitle className="text-md">Opções de Sincronização</CardTitle>
               </CardHeader>
               <CardContent className="p-0 space-y-2">
                 <div className="flex items-center space-x-2">
                   <Switch id="two-way-sync" defaultChecked />
-                  <Label htmlFor="two-way-sync">Enable two-way sync</Label>
+                  <Label htmlFor="two-way-sync">Ativar sincronização bidirecional</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch id="private-events" />
-                  <Label htmlFor="private-events">Sync private events as "Busy"</Label>
+                  <Label htmlFor="private-events">Sincronizar eventos privados como "Ocupado"</Label>
                 </div>
               </CardContent>
             </Card>
@@ -83,16 +83,16 @@ export default function SettingsPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-xl flex items-center"><UserCog className="mr-2 h-6 w-6 text-primary" />Account Preferences</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><UserCog className="mr-2 h-6 w-6 text-primary" />Preferências da Conta</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="profileName">Display Name</Label>
-            <Input id="profileName" defaultValue="AgendaWise User" />
+            <Label htmlFor="profileName">Nome de Exibição</Label>
+            <Input id="profileName" defaultValue="Usuário AgendaWise" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="profileEmail">Email Address</Label>
-            <Input id="profileEmail" type="email" defaultValue="user@agendawise.com" />
+            <Label htmlFor="profileEmail">Endereço de E-mail</Label>
+            <Input id="profileEmail" type="email" defaultValue="usuario@agendawise.com" />
           </div>
            <div className="flex items-center space-x-2">
             <Switch
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               onCheckedChange={setNotificationsEnabled}
             />
             <Label htmlFor="notifications-enabled" className="flex items-center">
-              <Bell className="mr-2 h-4 w-4" /> Enable Email Notifications
+              <Bell className="mr-2 h-4 w-4" /> Ativar Notificações por E-mail
             </Label>
           </div>
         </CardContent>
@@ -109,30 +109,30 @@ export default function SettingsPage() {
       
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-xl flex items-center"><Palette className="mr-2 h-6 w-6 text-primary" />Appearance</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><Palette className="mr-2 h-6 w-6 text-primary" />Aparência</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
                 <Switch id="dark-mode" disabled /> {/* Dark mode toggle could be implemented here */}
-                <Label htmlFor="dark-mode">Enable Dark Mode (Coming Soon)</Label>
+                <Label htmlFor="dark-mode">Ativar Modo Escuro (Em Breve)</Label>
             </div>
-            <p className="text-sm text-muted-foreground">Customize the look and feel of the application.</p>
+            <p className="text-sm text-muted-foreground">Personalize a aparência do aplicativo.</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline text-xl flex items-center"><ShieldCheck className="mr-2 h-6 w-6 text-primary" />Security & Privacy</CardTitle>
+          <CardTitle className="font-headline text-xl flex items-center"><ShieldCheck className="mr-2 h-6 w-6 text-primary" />Segurança e Privacidade</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-            <Button variant="outline">Change Password (Placeholder)</Button>
-            <Button variant="outline">Export My Data (Placeholder)</Button>
-            <p className="text-sm text-muted-foreground">Manage your account security and data privacy settings.</p>
+            <Button variant="outline">Alterar Senha (Espaço reservado)</Button>
+            <Button variant="outline">Exportar Meus Dados (Espaço reservado)</Button>
+            <p className="text-sm text-muted-foreground">Gerencie a segurança da sua conta e as configurações de privacidade de dados.</p>
         </CardContent>
       </Card>
 
       <div className="flex justify-end pt-4">
-        <Button size="lg" onClick={handleSaveChanges}>Save All Settings</Button>
+        <Button size="lg" onClick={handleSaveChanges}>Salvar Todas as Configurações</Button>
       </div>
     </div>
   );

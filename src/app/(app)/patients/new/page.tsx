@@ -32,8 +32,8 @@ export default function NewPatientPage() {
     // Mock form submission
     console.log("New patient data:", formData);
     toast({
-      title: "Patient Added (Mock)",
-      description: `${formData.name} has been successfully added to your directory.`,
+      title: "Paciente Adicionado (Simulado)",
+      description: `${formData.name} foi adicionado(a) com sucesso ao seu diretório.`,
       className: "bg-primary text-primary-foreground",
     });
     // Redirect to patients list or the new patient's detail page
@@ -49,52 +49,52 @@ export default function NewPatientPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="font-headline text-3xl">Add New Patient</h1>
-          <p className="text-muted-foreground">Enter the details for the new patient profile.</p>
+          <h1 className="font-headline text-3xl">Adicionar Novo Paciente</h1>
+          <p className="text-muted-foreground">Insira os detalhes para o novo perfil do paciente.</p>
         </div>
       </div>
       
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center">
-            <UserPlus className="mr-3 h-7 w-7 text-primary" /> Patient Details
+            <UserPlus className="mr-3 h-7 w-7 text-primary" /> Detalhes do Paciente
           </CardTitle>
           <CardDescription>
-            Please fill in all required fields accurately.
+            Por favor, preencha todos os campos obrigatórios com precisão.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" value={formData.name} onChange={handleChange} placeholder="e.g., John Doe" required />
+                <Label htmlFor="name">Nome Completo</Label>
+                <Input id="name" value={formData.name} onChange={handleChange} placeholder="Ex: João Ninguém" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="dob">Data de Nascimento</Label>
                 <Input id="dob" type="date" value={formData.dob} onChange={handleChange} required />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="e.g., john.doe@example.com" />
+                <Label htmlFor="email">Endereço de E-mail</Label>
+                <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="Ex: joao.ninguem@example.com" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="e.g., +1-555-123-4567" />
+                <Label htmlFor="phone">Número de Telefone</Label>
+                <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Ex: +55 (XX) XXXXX-XXXX" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea id="address" value={formData.address} onChange={handleChange} placeholder="e.g., 123 Wellness St, Tranquility City, CA 90210" className="min-h-[100px]" />
+              <Label htmlFor="address">Endereço</Label>
+              <Textarea id="address" value={formData.address} onChange={handleChange} placeholder="Ex: Rua do Bem-Estar, 123, Cidade da Tranquilidade, UF 12345-678" className="min-h-[100px]" />
             </div>
 
             <div className="flex justify-end pt-4">
               <Button type="submit" size="lg">
-                <Save className="mr-2 h-5 w-5" /> Save Patient
+                <Save className="mr-2 h-5 w-5" /> Salvar Paciente
               </Button>
             </div>
           </form>

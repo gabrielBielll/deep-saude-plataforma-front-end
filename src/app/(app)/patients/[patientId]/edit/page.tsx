@@ -66,8 +66,8 @@ export default function EditPatientPage() {
     // Mock form submission
     console.log("Updated patient data:", formData);
     toast({
-      title: "Patient Updated (Mock)",
-      description: `${formData.name}'s profile has been successfully updated.`,
+      title: "Paciente Atualizado (Simulado)",
+      description: `O perfil de ${formData.name} foi atualizado com sucesso.`,
       className: "bg-primary text-primary-foreground",
     });
     router.push(`/patients/${patientId}`); 
@@ -77,7 +77,7 @@ export default function EditPatientPage() {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-theme(spacing.16))]"> 
         <Save className="h-12 w-12 animate-spin text-primary" /> 
-        <p className="ml-4 text-lg text-muted-foreground">Loading patient data...</p>
+        <p className="ml-4 text-lg text-muted-foreground">Carregando dados do paciente...</p>
       </div>
     );
   }
@@ -91,52 +91,52 @@ export default function EditPatientPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="font-headline text-3xl">Edit Patient Profile</h1>
-          <p className="text-muted-foreground">Update the details for {formData.name}.</p>
+          <h1 className="font-headline text-3xl">Editar Perfil do Paciente</h1>
+          <p className="text-muted-foreground">Atualize os detalhes para {formData.name}.</p>
         </div>
       </div>
       
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="font-headline text-2xl flex items-center">
-            <UserCog className="mr-3 h-7 w-7 text-primary" /> Edit Patient Information
+            <UserCog className="mr-3 h-7 w-7 text-primary" /> Editar Informações do Paciente
           </CardTitle>
           <CardDescription>
-            Modify the fields below and save your changes.
+            Modifique os campos abaixo e salve suas alterações.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" value={formData.name} onChange={handleChange} placeholder="e.g., John Doe" required />
+                <Label htmlFor="name">Nome Completo</Label>
+                <Input id="name" value={formData.name} onChange={handleChange} placeholder="Ex: João Ninguém" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
+                <Label htmlFor="dob">Data de Nascimento</Label>
                 <Input id="dob" type="date" value={formData.dob} onChange={handleChange} required />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="e.g., john.doe@example.com" />
+                <Label htmlFor="email">Endereço de E-mail</Label>
+                <Input id="email" type="email" value={formData.email} onChange={handleChange} placeholder="Ex: joao.ninguem@example.com" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="e.g., +1-555-123-4567" />
+                <Label htmlFor="phone">Número de Telefone</Label>
+                <Input id="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Ex: +55 (XX) XXXXX-XXXX" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea id="address" value={formData.address} onChange={handleChange} placeholder="e.g., 123 Wellness St, Tranquility City, CA 90210" className="min-h-[100px]" />
+              <Label htmlFor="address">Endereço</Label>
+              <Textarea id="address" value={formData.address} onChange={handleChange} placeholder="Ex: Rua do Bem-Estar, 123, Cidade da Tranquilidade, UF 12345-678" className="min-h-[100px]" />
             </div>
 
             <div className="flex justify-end pt-4">
               <Button type="submit" size="lg">
-                <Save className="mr-2 h-5 w-5" /> Update Patient
+                <Save className="mr-2 h-5 w-5" /> Atualizar Paciente
               </Button>
             </div>
           </form>

@@ -36,10 +36,10 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tooltip: "Dashboard" },
-  { href: '/calendar', label: 'Calendar', icon: CalendarDays, tooltip: "Calendar" },
-  { href: '/patients', label: 'Patients', icon: Users, tooltip: "Patients" },
-  { href: '/settings', label: 'Settings', icon: Settings, tooltip: "Settings" },
+  { href: '/dashboard', label: 'Painel', icon: LayoutDashboard, tooltip: "Painel" },
+  { href: '/calendar', label: 'Calendário', icon: CalendarDays, tooltip: "Calendário" },
+  { href: '/patients', label: 'Pacientes', icon: Users, tooltip: "Pacientes" },
+  { href: '/settings', label: 'Configurações', icon: Settings, tooltip: "Configurações" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -91,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <SidebarFooter className="p-4 mt-auto">
            <div className="group-data-[collapsible=icon]:hidden flex flex-col items-center text-xs text-sidebar-foreground/70">
             <p>&copy; {new Date().getFullYear()} AgendaWise</p>
-            <p>All rights reserved.</p>
+            <p>Todos os direitos reservados.</p>
           </div>
         </SidebarFooter>
       </Sidebar>
@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
+                  <AvatarImage src="https://placehold.co/100x100.png" alt="Avatar do Usuário" data-ai-hint="user avatar" />
                   <AvatarFallback className="bg-primary text-primary-foreground">{userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -115,21 +115,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">AgendaWise User</p>
+                  <p className="text-sm font-medium leading-none">Usuário AgendaWise</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    user@agendawise.com
+                    usuario@agendawise.com
                   </p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <span>Configurações</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>Sair</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

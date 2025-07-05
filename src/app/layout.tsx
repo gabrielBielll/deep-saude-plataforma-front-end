@@ -3,6 +3,7 @@
 
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "next-themes"; // Importando o ThemeProvider
 
 import { SessionProvider } from 'next-auth/react';
 
@@ -21,10 +22,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <SessionProvider>
-          {children}
-          <Toaster />
-        </SessionProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
+            {children}
+            <Toaster />
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -2,6 +2,14 @@ import React from 'react';
 import { cookies } from 'next/headers'; // Para acessar cookies em Server Components
 import StatsCard from '@/components/admin/StatsCard';
 import { Users, BriefcaseMedical, CalendarClock, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter // Importando CardFooter e outros componentes Card
+} from "@/components/ui/card";
 
 // Estrutura de dados conforme especificado
 interface DashboardStats {

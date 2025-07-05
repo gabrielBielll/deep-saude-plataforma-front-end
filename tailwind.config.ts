@@ -48,6 +48,13 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        // Custom admin colors
+        admin: {
+          primary: '#3B82F6',
+          success: '#10B981',
+          warning: '#F59E0B',
+          danger: '#EF4444',
+        },
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',

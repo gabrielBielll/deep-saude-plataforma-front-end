@@ -10,7 +10,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-// Estrutura de dados conforme especificado
 interface DashboardStats {
   totalPsicologos: number;
   totalPacientes: number;
@@ -20,23 +19,16 @@ interface DashboardStats {
   previsaoProximoMes: number;
 }
 
-// Função para buscar os dados do dashboard (Server-side)
 async function getDashboardData(): Promise<DashboardStats> {
-  const cookieStore = cookies();
-  const token = cookieStore.get('adminSessionToken')?.value;
-
-  console.log("Server Component: Tentando buscar dados do dashboard com token:", token ? "Token Presente" : "Token Ausente");
-
-  // Mock dos dados por enquanto
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   const mockData: DashboardStats = {
     totalPsicologos: 12,
     totalPacientes: 157,
     consultasHoje: 8,
-    receitaMes: 2560000, // R$ 25.600,00 (em centavos)
-    crescimentoMensalPercent: 15, // 15%
-    previsaoProximoMes: 2800000, // R$ 28.000,00
+    receitaMes: 2560000,
+    crescimentoMensalPercent: 15,
+    previsaoProximoMes: 2800000,
   };
 
   return mockData;
@@ -46,17 +38,19 @@ export default async function AdminDashboardPage() {
   const stats = await getDashboardData();
 
   const formatCurrency = (valueInCents: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valueInCents / 100);
+    return new Intl.NumberFormat('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL' 
+    }).format(valueInCents / 100);
   };
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Dashboard Administrativo</h1>
+        <h1 className="text-2xl md:text-3xl font-semibold">Dashboard Administrativo</h1>
         <p className="text-muted-foreground">Visão geral e métricas da sua clínica.</p>
       </div>
 
-      {/* Grid para os StatsCards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total de Psicólogos"
@@ -89,7 +83,6 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      {/* Placeholders para Gráficos e Tabelas */}
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -97,8 +90,8 @@ export default async function AdminDashboardPage() {
             <CardDescription>Visualização do volume de agendamentos.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full bg-muted flex items-center justify-center">
-              <p className="text-muted-foreground">Gráfico de Agendamentos (Recharts) - Em breve</p>
+            <div className="h-[300px] w-full bg-muted rounded flex items-center justify-center">
+              <p className="text-muted-foreground">Gráfico de Agendamentos - Em breve</p>
             </div>
           </CardContent>
         </Card>
@@ -109,15 +102,14 @@ export default async function AdminDashboardPage() {
             <CardDescription>Últimas ações importantes no sistema.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full bg-muted flex items-center justify-center">
+            <div className="h-[300px] w-full bg-muted rounded flex items-center justify-center">
               <p className="text-muted-foreground">Tabela de Atividades - Em breve</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Card adicional para previsão */}
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-4">
         <StatsCard
           title="Previsão Próximo Mês"
           value={formatCurrency(stats.previsaoProximoMes)}

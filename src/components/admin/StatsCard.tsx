@@ -1,5 +1,4 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type LucideIcon } from 'lucide-react';
 
 interface StatsCardProps {
@@ -22,44 +21,54 @@ export default function StatsCard({
   colorVariant = 'default',
 }: StatsCardProps) {
 
-  // Mapeamento de variantes de cor para classes Tailwind
-  const colorClasses = {
-    primary: 'text-blue-600',
-    success: 'text-green-600',
-    warning: 'text-yellow-600',
-    danger: 'text-red-600',
-    default: 'text-muted-foreground',
+  const getVariantClasses = () => {
+    switch (colorVariant) {
+      case 'primary':
+        return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800';
+      case 'success':
+        return 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800';
+      case 'warning':
+        return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800';
+      case 'danger':
+        return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800';
+      default:
+        return 'bg-white dark:bg-gray-800';
+    }
   };
 
-  const backgroundClasses = {
-    primary: 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800',
-    success: 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800',
-    warning: 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800',
-    danger: 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800',
-    default: '',
+  const getIconColor = () => {
+    switch (colorVariant) {
+      case 'primary':
+        return 'text-blue-600';
+      case 'success':
+        return 'text-green-600';
+      case 'warning':
+        return 'text-yellow-600';
+      case 'danger':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
   };
-
-  const iconColorClass = colorClasses[colorVariant] || colorClasses.default;
-  const cardBackgroundClass = backgroundClasses[colorVariant] || backgroundClasses.default;
 
   return (
-    <Card className={cardBackgroundClass}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-5 w-5 ${iconColorClass}`} />
-      </CardHeader>
-      <CardContent>
+    <div className={`rounded-lg border shadow-sm p-6 ${getVariantClasses()}`}>
+      <div className="flex items-center justify-between space-y-0 pb-2">
+        <h3 className="text-sm font-medium">{title}</h3>
+        <Icon className={`h-5 w-5 ${getIconColor()}`} />
+      </div>
+      <div className="pt-0">
         <div className="text-2xl font-bold">{value}</div>
         {description && (
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{description}</p>
         )}
         {(footerText || FooterIcon) && (
-          <div className="flex items-center mt-2 text-xs text-muted-foreground">
-            {FooterIcon && <FooterIcon className={`h-3 w-3 mr-1 ${iconColorClass}`} />}
+          <div className="flex items-center mt-2 text-xs text-gray-600 dark:text-gray-400">
+            {FooterIcon && <FooterIcon className={`h-3 w-3 mr-1 ${getIconColor()}`} />}
             {footerText && <span>{footerText}</span>}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

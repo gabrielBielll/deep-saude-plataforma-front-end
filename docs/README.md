@@ -27,11 +27,14 @@ Para facilitar a navegação, a documentação está organizada nas seguintes se
     *   [Genkit (Funcionalidades de IA)](./api-integration/genkit.md)
 6.  **[Gerenciamento de Estado](./state-management/overview.md)**
     *   [Visão Geral (NextAuth.js para Sessão)](./state-management/overview.md)
-7.  **[Estilo e Tematização](./styling/tailwind.md)**
+7.  **[Autenticação e Painel Admin](./admin-auth/login.md)**
+    *   [Tela de Login Administrativo](./admin-auth/login.md)
+    *   [Layout do Painel de Administração](./admin-auth/admin-panel.md)
+8.  **[Estilo e Tematização](./styling/tailwind.md)**
     *   [Tailwind CSS](./styling/tailwind.md)
-8.  **[Deployment](./deployment/apphosting.md)**
+9.  **[Deployment](./deployment/apphosting.md)**
     *   [Firebase App Hosting](./deployment/apphosting.md)
-9.  **[Troubleshooting](./troubleshooting/common-issues.md)**
+10. **[Troubleshooting](./troubleshooting/common-issues.md)**
     *   [Problemas Comuns e Soluções](./troubleshooting/common-issues.md)
 
 ## Como Usar esta Documentação com uma IA

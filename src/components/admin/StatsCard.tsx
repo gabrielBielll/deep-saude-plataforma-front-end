@@ -46,12 +46,12 @@ export default function StatsCard({
           <p className="text-xs text-muted-foreground">{description}</p>
         )}
       </CardContent>
-      {footerText && (
+      {/* {footerText && (
         <CardFooter className="text-xs text-muted-foreground">
           {FooterIcon && <FooterIcon className={`h-4 w-4 mr-1 ${iconColorClass}`} />}
           {footerText}
         </CardFooter>
-      )}
+      )} */}
     </Card>
   );
 }

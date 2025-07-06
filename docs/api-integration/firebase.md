@@ -13,7 +13,24 @@ O Firebase pode estar envolvido no processo de autenticação do Google da segui
 1.  **Configuração do Provedor Google no Firebase:** O projeto Firebase associado à aplicação precisa ter o provedor de login do Google ativado e configurado com as credenciais OAuth 2.0 (Client ID e Client Secret).
 2.  **Credenciais no NextAuth.js:** Essas mesmas credenciais do Google Cloud/Firebase (Client ID e Client Secret) são então usadas na configuração do provedor Google dentro do NextAuth.js (no arquivo `src/app/api/auth/[...nextauth]/route.ts`).
 
-O fluxo de login (`signIn('google')` em `src/app/page.tsx`) redireciona o usuário para a tela de login do Google. Após a autenticação bem-sucedida, o Google redireciona de volta para a aplicação com um código ou token, que o NextAuth.js usa para estabelecer uma sessão para o usuário.
+O fluxo de login (`signIn('google')` em `src/app/page.tsx`) redireciona o usuário para a tela de login do Google. Após a autenticação bem-sucedida, o Google redireciona de volta para a aplicação com um código ou token, que o NextAuth.js usa para estabelecer uma sessão para o usuário. Este fluxo é tipicamente para usuários finais da plataforma (ex: psicólogos, pacientes).
+
+### Autenticação do Painel de Administração
+
+É importante notar que o painel de administração (`/admin/*`) utiliza um mecanismo de autenticação separado, detalhado em `docs/admin-auth/login.md`. Este sistema envolve:
+*   Uma tela de login em `src/app/admin/login/page.tsx`.
+*   Uma Server Action (`handleLogin` em `src/app/admin/login/actions.ts`) que, na sua implementação atual (mock), define um cookie de sessão chamado `adminSessionToken`.
+*   Este cookie `adminSessionToken` é o principal meio de autenticação para as rotas do painel de administração e é gerenciado independentemente das sessões do NextAuth.js.
+
+Idealmente, a Server Action `handleLogin` para administradores poderia, em uma implementação de produção, interagir com o Firebase Authentication para verificar as credenciais do administrador e gerar um token seguro que seria então usado para criar o `adminSessionToken`. No entanto, o fluxo atual é um mock e não se integra diretamente com o Firebase Authentication nesse nível.
+
+## Gerenciamento de Sessão
+
+O NextAuth.js gerencia as sessões dos usuários autenticados via provedores como o Google, geralmente usando JSON Web Tokens (JWTs) armazenados em cookies seguros (`httpOnly`, `secure`).
+
+Para o painel de administração, a sessão é gerenciada pelo cookie `adminSessionToken` configurado pela Server Action `handleLogin`. Conforme detalhado em `docs/admin-auth/login.md`, este cookie também é configurado com atributos de segurança: `httpOnly`, `secure` (em produção), `path: "/"`, `sameSite: "lax"`, e `maxAge`.
+
+Ambos os mecanismos de sessão devem ser cuidadosamente gerenciados para garantir a segurança da aplicação.
 
 ## Configuração do Firebase no Projeto
 

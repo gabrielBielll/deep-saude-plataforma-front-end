@@ -48,23 +48,22 @@ O componente principal da tela de login é `AdminLoginPage`, definido em `src/ap
     *   Localizada em `src/app/admin/login/actions.ts`.
     *   É marcada com `"use server";` para indicar que é uma Server Action.
     *   Recebe o estado anterior (`prevState: LoginFormState`) e os dados do formulário (`formData: FormData`) como argumentos.
-    *   **Lógica Atual (Mock):**
-        *   A implementação atual da `handleLogin` é um **mock** para simular um login bem-sucedido.
-        *   Ela não realiza validação de credenciais ou consulta a banco de dados.
-        *   Define um token de sessão falso: `mock-admin-jwt-token-para-teste-de-ui`.
-        *   Configura um cookie de sessão chamado `adminSessionToken` com o token mock. Este cookie é:
-            *   `httpOnly`: Não acessível por JavaScript no lado do cliente.
-            *   `secure`: Enviado apenas sobre HTTPS em produção.
-            *   `path: "/"`: Disponível em todo o site.
-            *   `sameSite: "lax"`: Proteção CSRF.
-            *   `maxAge: 60 * 60`: Válido por 1 hora.
-        *   Retorna um objeto `LoginFormState` com `success: true` e a mensagem "Login simulado com sucesso!".
-    *   **Lógica Esperada (Produção):**
-        *   Em um ambiente de produção, esta action deveria:
-            *   Validar os dados recebidos de `formData` (embora a validação primária ocorra no cliente com Zod, uma validação no servidor é crucial). O schema `loginSchema` presente no arquivo `actions.ts` pode ser usado para isso.
-            *   Consultar um serviço de autenticação ou banco de dados para verificar as credenciais (email, senha) e o código da clínica.
-            *   Em caso de falha, retornar `success: false` e mensagens de erro apropriadas em `message` e/ou `errors`.
-            *   Em caso de sucesso, gerar um token de sessão real e seguro, armazená-lo (ex: em um cookie `httpOnly`) e retornar `success: true`.
+    *   **Lógica de Autenticação (Real):**
+        *   A lógica de mock foi **removida** e substituída por uma chamada de API real.
+        *   A action agora usa `fetch` para enviar uma requisição `POST` para o endpoint de autenticação do backend (`/api/auth/login`), que é obtido da variável de ambiente `process.env.NEXT_PUBLIC_API_URL`.
+        *   **Em caso de sucesso (resposta HTTP 200):**
+            *   A API retorna um token JWT.
+            *   Este token é armazenado em um cookie de sessão chamado `adminSessionToken`. O cookie é configurado com as seguintes propriedades de segurança:
+                *   `httpOnly`: Não acessível por JavaScript no lado do cliente, prevenindo ataques XSS.
+                *   `secure`: Enviado apenas sobre HTTPS.
+                *   `path: "/"`: Disponível em todo o site.
+                *   `sameSite: "lax"`: Oferece proteção contra ataques CSRF.
+                *   `maxAge: 60 * 60 * 24 * 7`: Válido por 7 dias.
+            *   A action retorna um estado com `success: true`.
+        *   **Em caso de credenciais inválidas (resposta HTTP 401):**
+            *   A action retorna `success: false` com uma mensagem de erro específica: "Credenciais inválidas. Verifique seu e-mail e senha."
+        *   **Em caso de outras falhas de rede ou erros do servidor:**
+            *   Um bloco `try...catch` captura exceções e retorna `success: false` com uma mensagem de erro genérica: "Não foi possível fazer login. Tente novamente mais tarde."
     *   **Estrutura de Retorno (`LoginFormState`):**
         *   `message: string`: Mensagem geral sobre o resultado da operação.
         *   `errors?: { email?: string[]; password?: string[]; clinicCode?: string[]; _form?: string[]; }`: Erros específicos por campo ou erros gerais do formulário (chave `_form`).

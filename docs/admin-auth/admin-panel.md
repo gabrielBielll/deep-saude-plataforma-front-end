@@ -63,7 +63,7 @@ Detalhes sobre os componentes `AdminSidebar` e `AdminHeader` são cruciais para 
 1.  **Estado da Sidebar Colapsável (Desktop):**
     *   O `AdminLayout` utiliza `React.useState` para gerenciar o estado `isSidebarCollapsed` (inicialmente `false`, ou seja, expandida).
     *   A função `toggleSidebar` (atualmente não conectada a nenhum controle no `AdminHeader` no código fornecido no plano, mas presente) permite alternar este estado.
-    *   A classe CSS `md:ml-${isSidebarCollapsed ? '14' : '64'}` no `div` que envolve o conteúdo principal (`<main>`) ajusta a margem esquerda do conteúdo para acomodar a sidebar expandida (`ml-64`, que geralmente corresponde a `16rem` ou `256px`) ou colapsada (`ml-14`, que geralmente corresponde a `3.5rem` ou `56px`). Isso sugere que a sidebar colapsada tem `56px` de largura e a expandida `256px`.
+    *   A margem esquerda do conteúdo principal (`<main>`) é ajustada dinamicamente usando a função `cn` (de `lib/utils.ts`) para garantir que o compilador do Tailwind CSS reconheça as classes. A lógica aplicada é: `cn("md:ml-64", isSidebarCollapsed && "md:ml-14")`. Isso aplica a margem para a sidebar expandida (`md:ml-64`) por padrão e a sobrepõe com a margem para a sidebar colapsada (`md:ml-14`) quando `isSidebarCollapsed` é `true`.
     *   A `AdminSidebar` recebe `isCollapsed` e adapta sua renderização interna (ex: mostrando apenas ícones quando `isCollapsed={true}`).
 
 2.  **Estrutura Responsiva:**

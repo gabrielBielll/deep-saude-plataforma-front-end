@@ -1,33 +1,86 @@
-"use client"; // Necessário para useState e useEffect
+"use client";
 
-import * as React from "react";
+import React, { useState, useEffect } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
-import { cn } from "@/lib/utils"; // Precisamos importar o 'cn'
+import { cn } from "@/lib/utils";
+import { Loader2, ServerCrash } from "lucide-react"; // Ícones para o estado de loading e erro
+
+// NOVO: Componente para a tela de carregamento
+const BackendWakeUpScreen = ({ status }: { status: 'checking' | 'error' }) => (
+  <div className="flex h-screen w-full flex-col items-center justify-center bg-muted/40 p-4 text-center">
+    {status === 'checking' && (
+      <>
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Conectando ao servidor...</h2>
+        <p className="text-muted-foreground">Isso pode levar alguns segundos se o serviço estiver inativo.</p>
+      </>
+    )}
+    {status === 'error' && (
+      <>
+        <ServerCrash className="h-12 w-12 text-destructive mb-4" />
+        <h2 className="text-xl font-semibold text-destructive">Falha ao conectar com o servidor</h2>
+        <p className="text-muted-foreground">Não foi possível estabelecer comunicação com a API. Por favor, tente novamente mais tarde.</p>
+      </>
+    )}
+  </div>
+);
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // NOVO: Estado para controlar o status do backend
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'awake' | 'error'>('checking');
+  
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+
+  // NOVO: Efeito para "acordar" o backend quando o layout é montado
+  useEffect(() => {
+    // Definimos uma função assíncrona dentro do useEffect
+    const wakeUpBackend = async () => {
+      try {
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/health`;
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Status da resposta: ${response.status}`);
+        }
+        
+        // Se a resposta for OK, o backend está acordado
+        setBackendStatus('awake');
+
+      } catch (error) {
+        console.error("Falha ao 'acordar' o backend:", error);
+        setBackendStatus('error');
+      }
+    };
+    
+    // Chamamos a função
+    wakeUpBackend();
+  }, []); // O array vazio [] garante que isso execute apenas uma vez
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+  // NOVO: Renderização condicional baseada no status do backend
+  if (backendStatus !== 'awake') {
+    return <BackendWakeUpScreen status={backendStatus} />;
+  }
+
+  // Se o backend estiver acordado, renderiza o layout normal
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <AdminSidebar
         isCollapsed={isSidebarCollapsed}
         className="hidden md:fixed md:inset-y-0 md:left-0 md:z-50 md:flex"
       />
-
-      {/* ===== LINHA CORRIGIDA ABAIXO ===== */}
       <div
         className={cn(
           "flex flex-col sm:gap-4 sm:py-4 transition-all duration-300 ease-in-out",
-          isSidebarCollapsed ? "md:ml-14" : "md:ml-64" // Esta é a forma correta
+          isSidebarCollapsed ? "md:ml-14" : "md:ml-64"
         )}
       >
         <AdminHeader />

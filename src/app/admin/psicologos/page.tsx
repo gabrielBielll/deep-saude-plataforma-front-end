@@ -1,7 +1,8 @@
-import React from 'react';
+"use client"; // MUDANÇA IMPORTANTE: Agora esta parte é um Client Component
+
+import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, AlertTriangle } from 'lucide-react';
 
 import {
   Card,
@@ -18,97 +19,89 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-// Definindo o tipo de dados para um psicólogo, conforme a API retorna
+import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast";
+import { deletePsicologo } from './actions'; // Importando a nova action
+
+// A definição da interface permanece a mesma
 interface Psicologo {
   id: string;
   nome: string;
   email: string;
-  clinica_id: string;
-  papel_id: string;
 }
 
-// Função para buscar os dados da API no servidor
-async function getPsicologos(token: string): Promise<Psicologo[] | { error: string }> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/psicologos`;
+// O componente da página agora recebe os dados iniciais do Server Component
+export default function AdminPsicologosPage({
+  initialData,
+  error,
+}: {
+  initialData: Psicologo[];
+  error?: string;
+}) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [psicologos, setPsicologos] = useState(initialData);
 
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-      // Usamos cache 'no-store' para garantir que os dados sejam sempre os mais recentes
-      cache: 'no-store',
+  const handleDelete = (psicologoId: string) => {
+    startTransition(async () => {
+      const result = await deletePsicologo(psicologoId);
+      if (result.success) {
+        // Atualiza o estado local para remover o item da UI imediatamente
+        setPsicologos(psicologos.filter(p => p.id !== psicologoId));
+        toast({
+          title: "Sucesso!",
+          description: result.message,
+        });
+      } else {
+        toast({
+          title: "Erro",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
     });
+  };
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      // Nossa API Clojure retorna o erro no campo 'erro'
-      throw new Error(errorData.erro || 'Falha ao buscar os dados dos psicólogos.');
-    }
-
-    return response.json();
-  } catch (error: any) {
-    console.error("Erro ao buscar psicólogos:", error);
-    return { error: error.message };
-  }
-}
-
-// O componente da página agora é um Server Component assíncrono
-export default async function AdminPsicologosPage() {
-  const cookieStore = cookies();
-  const token = cookieStore.get('adminSessionToken')?.value;
-
-  // Se não houver token, o middleware já deveria ter redirecionado, mas é uma boa prática verificar.
-  if (!token) {
+  if (error) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Acesso Negado</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Você não está autenticado. Por favor, faça o login.</p>
-            </CardContent>
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><AlertTriangle/> Erro ao Carregar Dados</CardTitle>
+            <CardDescription>Não foi possível buscar os psicólogos da sua clínica.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
         </Card>
     );
   }
 
-  const psicologosData = await getPsicologos(token);
-
-  // Verifica se a busca de dados retornou um erro
-  if ('error' in psicologosData) {
-    return (
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle>Erro ao Carregar Dados</CardTitle>
-          <CardDescription>Não foi possível buscar os psicólogos da sua clínica.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-destructive">{psicologosData.error}</p>
-          <p className="text-xs text-muted-foreground mt-2">Verifique os logs da API para mais detalhes.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Se tudo deu certo, renderiza a tabela
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-            <div>
-                <CardTitle>Gestão de Psicólogos</CardTitle>
-                <CardDescription>Adicione, edite e gerencie os psicólogos da clínica.</CardDescription>
-            </div>
-            <Button asChild>
-                <Link href="/admin/psicologos/novo">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Adicionar Psicólogo
-                </Link>
-            </Button>
+          <div>
+            <CardTitle>Gestão de Psicólogos</CardTitle>
+            <CardDescription>Adicione, edite e gerencie os psicólogos da clínica.</CardDescription>
+          </div>
+          <Button asChild>
+            <Link href="/admin/psicologos/novo">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Adicionar Psicólogo
+            </Link>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -121,20 +114,39 @@ export default async function AdminPsicologosPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {psicologosData.length > 0 ? (
-              psicologosData.map((psicologo) => (
+            {psicologos.length > 0 ? (
+              psicologos.map((psicologo) => (
                 <TableRow key={psicologo.id}>
                   <TableCell className="font-medium">{psicologo.nome}</TableCell>
                   <TableCell>{psicologo.email}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="icon" className="mr-2 h-8 w-8">
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Editar</span>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="outline" size="icon" className="h-8 w-8" disabled>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
                     </Button>
-                    <Button variant="destructive" size="icon" className="h-8 w-8">
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Excluir</span>
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" className="h-8 w-8" disabled={isPending}>
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Excluir</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Essa ação não pode ser desfeita. Isso excluirá permanentemente o psicólogo
+                             "{psicologo.nome}" e todos os seus dados associados.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(psicologo.id)}>
+                            Sim, excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </TableCell>
                 </TableRow>
               ))

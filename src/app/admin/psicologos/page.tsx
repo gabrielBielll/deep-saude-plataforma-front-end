@@ -1,6 +1,6 @@
 import React from 'react';
 import { cookies } from 'next/headers';
-import PsicologosClientPage from './PsicologosClientPage'; // Vamos criar este componente logo abaixo
+import ClientComponent from './ClientComponent'; // Importaremos o componente cliente definido neste mesmo arquivo
 
 // Definindo o tipo de dados para um psicólogo
 interface Psicologo {
@@ -20,7 +20,7 @@ async function getPsicologos(token: string): Promise<Psicologo[] | { error: stri
       headers: {
         'Authorization': `Bearer ${token}`,
       },
-      cache: 'no-store', // Garante que os dados sejam sempre buscados do servidor
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -36,23 +36,22 @@ async function getPsicologos(token: string): Promise<Psicologo[] | { error: stri
 
 // ===================================================================
 // PARTE 1: SERVER COMPONENT (A PÁGINA)
-// Responsável por buscar os dados de forma segura no servidor.
+// Esta parte executa no servidor.
 // ===================================================================
 export default async function AdminPsicologosPage() {
   const cookieStore = cookies();
   const token = cookieStore.get('adminSessionToken')?.value;
 
   if (!token) {
-    // Idealmente, o middleware já redirecionou, mas é uma salvaguarda.
-    return <PsicologosClientPage initialData={[]} error="Token de autenticação não encontrado." />;
+    return <ClientComponent initialData={[]} error="Token de autenticação não encontrado." />;
   }
 
   const psicologosData = await getPsicologos(token);
 
   if ('error' in psicologosData) {
-    return <PsicologosClientPage initialData={[]} error={psicologosData.error} />;
+    return <ClientComponent initialData={[]} error={psicologosData.error} />;
   }
   
   // Passa os dados buscados para o Client Component
-  return <PsicologosClientPage initialData={psicologosData} />;
+  return <ClientComponent initialData={psicologosData} />;
 }

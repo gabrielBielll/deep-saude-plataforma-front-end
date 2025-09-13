@@ -6,7 +6,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import { cn } from "@/lib/utils";
 import { Loader2, ServerCrash } from "lucide-react"; // Ícones para o estado de loading e erro
 
-// NOVO: Componente para a tela de carregamento
+// Componente para a tela de carregamento e erro
 const BackendWakeUpScreen = ({ status }: { status: 'checking' | 'error' }) => (
   <div className="flex h-screen w-full flex-col items-center justify-center bg-muted/40 p-4 text-center">
     {status === 'checking' && (
@@ -31,21 +31,28 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // NOVO: Estado para controlar o status do backend
+  // Estado para controlar o status da conexão com o backend
   const [backendStatus, setBackendStatus] = useState<'checking' | 'awake' | 'error'>('checking');
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
-  // NOVO: Efeito para "acordar" o backend quando o layout é montado
+  // Efeito para "acordar" o backend quando o layout é montado
   useEffect(() => {
-    // Definimos uma função assíncrona dentro do useEffect
     const wakeUpBackend = async () => {
+      // Linha de debug para verificar a variável de ambiente no console do navegador
+      console.log("API URL A SER USADA:", process.env.NEXT_PUBLIC_API_URL);
+      
       try {
+        // Verifica se a URL da API está definida
+        if (!process.env.NEXT_PUBLIC_API_URL) {
+          throw new Error("A variável de ambiente NEXT_PUBLIC_API_URL não está configurada.");
+        }
+
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/health`;
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
-          throw new Error(`Status da resposta: ${response.status}`);
+          throw new Error(`O servidor respondeu com status: ${response.status}`);
         }
         
         // Se a resposta for OK, o backend está acordado
@@ -57,20 +64,20 @@ export default function AdminLayout({
       }
     };
     
-    // Chamamos a função
+    // Chama a função de "acordar"
     wakeUpBackend();
-  }, []); // O array vazio [] garante que isso execute apenas uma vez
+  }, []); // O array vazio [] garante que isso execute apenas uma vez quando o componente montar
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
-  // NOVO: Renderização condicional baseada no status do backend
+  // Renderiza a tela de carregamento/erro enquanto o backend não está 'awake'
   if (backendStatus !== 'awake') {
     return <BackendWakeUpScreen status={backendStatus} />;
   }
 
-  // Se o backend estiver acordado, renderiza o layout normal
+  // Se o backend estiver acordado, renderiza o layout normal da aplicação
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <AdminSidebar

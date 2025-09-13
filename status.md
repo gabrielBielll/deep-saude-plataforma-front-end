@@ -1,14 +1,37 @@
-# Status do Projeto
+Relatório Técnico de Atualização – Finalização do CRUD de Psicólogos
+Versão: 5.0 Data: 13 de Setembro de 2025 Status: Módulo de Gestão de Psicólogos 100% Concluído (CRUD Completo).
 
-## Última Atualização: 07 de Setembro de 2025
+1. Resumo Executivo
+Esta sessão de desenvolvimento marca a finalização completa do primeiro módulo de negócio da plataforma, a Gestão de Psicólogos. Com a implementação bem-sucedida da funcionalidade de Editar (Update), agora possuímos um ciclo de vida de Create, Read, Update e Delete (CRUD) totalmente funcional e integrado entre o frontend (Next.js) e o backend (Clojure).
 
-O progresso mais recente representa um marco significativo na integração entre o frontend e o backend da plataforma.
+A arquitetura estabelecida nas fases anteriores provou ser escalável e robusta, permitindo que a nova funcionalidade de edição fosse adicionada de forma eficiente e consistente. A plataforma agora possui um módulo administrativo completo, servindo como um blueprint validado para a construção dos próximos módulos, como a gestão de pacientes.
 
-### Resumo das Conquistas:
-- **Autenticação Real:** A autenticação de administrador agora funciona com JWT contra a API real, substituindo os dados de mock.
-- **CRUD de Psicólogos:** As funcionalidades de **Criar (Create)** e **Ler (Read)** para a gestão de psicólogos estão 100% funcionais e conectadas ao backend.
-- **UI Dinâmica:** A lista de psicólogos é carregada dinamicamente a partir da API e a interface é atualizada automaticamente após a criação de um novo profissional.
+2. Funcionalidades Implementadas (Nesta Fase)
+API (Backend - Clojure):
 
-Para uma análise técnica completa e detalhada de todas as implementações, consulte o relatório completo.
+Endpoint de Busca Individual: Criado o endpoint GET /api/usuarios/:id para buscar um usuário específico de forma segura, validando a clinica_id. Essencial para pré-popular os formulários de edição no frontend.
+Endpoint de Atualização: Implementado o endpoint PUT /api/usuarios/:id para atualizar os dados de um usuário (nome, email). A lógica garante a segurança multi-tenant, permitindo que um administrador altere apenas usuários da sua própria clínica.
+Aplicação (Frontend - Next.js):
 
-**➡️ [Ver Relatório Detalhado de 07/09/2025](./2025-09-07-integracao-crud-psicologos.md)**
+Página de Edição Dinâmica: Criada a nova rota /admin/psicologos/[id]/edit. Esta página é um Server Component que busca os dados atuais do psicólogo antes da renderização.
+Formulário de Edição: Implementado um formulário de edição (Client Component) que vem pré-preenchido com os dados do psicólogo.
+Lógica de Atualização com Server Action: Uma nova Server Action (updatePsicologo) foi criada para lidar com a submissão do formulário. Ela valida os dados, envia a requisição PUT para a API e, em caso de sucesso, utiliza revalidatePath para atualizar a lista de psicólogos e redireciona o usuário.
+
+### Arquivos-Chave Modificados (Frontend)
+- **`src/app/admin/psicologos/page.tsx`**: Página principal que lista os psicólogos (Read).
+- **`src/app/admin/psicologos/novo/page.tsx`**: Página do formulário para criar um novo psicólogo (Create).
+- **`src/app/admin/psicologos/novo/actions.ts`**: Contém a Server Action para lidar com a criação do novo psicólogo.
+- **`src/app/admin/psicologos/[id]/edit/page.tsx`**: Página dinâmica para editar um psicólogo existente (Update).
+- **`src/app/admin/psicologos/[id]/edit/EditPsicologoForm.tsx`**: Componente de formulário, pré-preenchido com os dados do psicólogo para edição.
+- **`src/app/admin/psicologos/[id]/edit/actions.ts`**: Contém a Server Action `updatePsicologo` para atualizar os dados.
+- **`src/app/admin/psicologos/actions.ts`**: Arquivo de ações gerais do módulo, provavelmente contendo a lógica para deletar um psicólogo (Delete).
+
+3. Status Atual
+O CRUD do módulo de Gestão de Psicólogos está concluído. A base técnica está mais sólida do que nunca. Todos os desafios de integração, autenticação, autorização e manipulação de dados para esta entidade foram superados.
+
+4. Próximos Passos
+O caminho está livre para expandir a plataforma. Nosso próximo objetivo é replicar o sucesso deste módulo.
+
+Iniciar o Módulo de Gestão de Pacientes: Começaremos a desenvolver o CRUD para a entidade "Pacientes", aplicando a mesma arquitetura validada:
+Backend: Criação dos endpoints da API em Clojure para GET, POST, PUT e DELETE em /api/pacientes.
+Frontend: Construção das páginas e Server Actions correspondentes em Next.js.

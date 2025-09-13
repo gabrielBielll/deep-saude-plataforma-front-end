@@ -119,9 +119,11 @@ export default function ClientComponent({
                   <TableCell className="font-medium">{psicologo.nome}</TableCell>
                   <TableCell>{psicologo.email}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled>
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Editar</span>
+                    <Button variant="outline" size="icon" className="h-8 w-8" asChild>
+                      <Link href={`/admin/psicologos/${psicologo.id}/edit`}>
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Editar</span>
+                      </Link>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>

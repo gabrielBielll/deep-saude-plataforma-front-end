@@ -1,165 +1,58 @@
-"use client"; // MUDANÇA IMPORTANTE: Agora esta parte é um Client Component
+import React from 'react';
+import { cookies } from 'next/headers';
+import PsicologosClientPage from './PsicologosClientPage'; // Vamos criar este componente logo abaixo
 
-import React, { useState, useTransition } from 'react';
-import Link from 'next/link';
-import { PlusCircle, Edit, Trash2, AlertTriangle } from 'lucide-react';
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
-import { Button } from '@/components/ui/button';
-import { useToast } from "@/hooks/use-toast";
-import { deletePsicologo } from './actions'; // Importando a nova action
-
-// A definição da interface permanece a mesma
+// Definindo o tipo de dados para um psicólogo
 interface Psicologo {
   id: string;
   nome: string;
   email: string;
+  clinica_id: string;
+  papel_id: string;
 }
 
-// O componente da página agora recebe os dados iniciais do Server Component
-export default function AdminPsicologosPage({
-  initialData,
-  error,
-}: {
-  initialData: Psicologo[];
-  error?: string;
-}) {
-  const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  const [psicologos, setPsicologos] = useState(initialData);
-
-  const handleDelete = (psicologoId: string) => {
-    startTransition(async () => {
-      const result = await deletePsicologo(psicologoId);
-      if (result.success) {
-        // Atualiza o estado local para remover o item da UI imediatamente
-        setPsicologos(psicologos.filter(p => p.id !== psicologoId));
-        toast({
-          title: "Sucesso!",
-          description: result.message,
-        });
-      } else {
-        toast({
-          title: "Erro",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
+// Função para buscar os dados da API no servidor
+async function getPsicologos(token: string): Promise<Psicologo[] | { error: string }> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/psicologos`;
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      cache: 'no-store', // Garante que os dados sejam sempre buscados do servidor
     });
-  };
 
-  if (error) {
-    return (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><AlertTriangle/> Erro ao Carregar Dados</CardTitle>
-            <CardDescription>Não foi possível buscar os psicólogos da sua clínica.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-    );
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Falha ao buscar os dados dos psicólogos.');
+    }
+    return response.json();
+  } catch (error: any) {
+    console.error("Erro ao buscar psicólogos:", error);
+    return { error: error.message };
+  }
+}
+
+// ===================================================================
+// PARTE 1: SERVER COMPONENT (A PÁGINA)
+// Responsável por buscar os dados de forma segura no servidor.
+// ===================================================================
+export default async function AdminPsicologosPage() {
+  const cookieStore = cookies();
+  const token = cookieStore.get('adminSessionToken')?.value;
+
+  if (!token) {
+    // Idealmente, o middleware já redirecionou, mas é uma salvaguarda.
+    return <PsicologosClientPage initialData={[]} error="Token de autenticação não encontrado." />;
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Gestão de Psicólogos</CardTitle>
-            <CardDescription>Adicione, edite e gerencie os psicólogos da clínica.</CardDescription>
-          </div>
-          <Button asChild>
-            <Link href="/admin/psicologos/novo">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Adicionar Psicólogo
-            </Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {psicologos.length > 0 ? (
-              psicologos.map((psicologo) => (
-                <TableRow key={psicologo.id}>
-                  <TableCell className="font-medium">{psicologo.nome}</TableCell>
-                  <TableCell>{psicologo.email}</TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8" disabled>
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Editar</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-8 w-8" disabled={isPending}>
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Excluir</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Essa ação não pode ser desfeita. Isso excluirá permanentemente o psicólogo
-                             "{psicologo.nome}" e todos os seus dados associados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(psicologo.id)}>
-                            Sim, excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center h-24">
-                  Nenhum psicólogo encontrado.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
+  const psicologosData = await getPsicologos(token);
+
+  if ('error' in psicologosData) {
+    return <PsicologosClientPage initialData={[]} error={psicologosData.error} />;
+  }
+  
+  // Passa os dados buscados para o Client Component
+  return <PsicologosClientPage initialData={psicologosData} />;
 }

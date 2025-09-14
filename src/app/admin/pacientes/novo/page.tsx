@@ -1,55 +1,43 @@
-"use client";
-
-import React, { useEffect } from "react";
+import React from 'react';
+import { cookies } from 'next/headers';
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useFormState, useFormStatus } from "react-dom";
-import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea"; // Usaremos para o endereço
-import { useToast } from "@/hooks/use-toast";
-import { createPaciente, type FormState } from "./actions"; // Importaremos a action que vamos criar
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, UserPlus } from "lucide-react";
+import NovoPacienteForm from './NovoPacienteForm'; // Criaremos este componente cliente separado
 
-const initialState: FormState = {
-  message: "",
-  errors: {},
-  success: false,
-};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Salvando..." : "Salvar Paciente"}
-    </Button>
-  );
+// Interface para os dados do psicólogo
+interface Psicologo {
+  id: string;
+  nome: string;
 }
 
-export default function AdminNovoPacientePage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [state, formAction] = useFormState(createPaciente, initialState);
+// Função para buscar os psicólogos no servidor
+async function getPsicologos(token: string): Promise<Psicologo[]> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/psicologos`;
+  try {
+    const response = await fetch(apiUrl, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!response.ok) return [];
+    return response.json();
+  } catch (error) {
+    console.error("Erro ao buscar psicólogos:", error);
+    return [];
+  }
+}
 
-  useEffect(() => {
-    if (state.success) {
-      toast({
-        title: "Sucesso!",
-        description: state.message,
-      });
-      router.push("/admin/pacientes"); // Redireciona para a lista após o sucesso
-    } else if (state.message && !state.success) {
-      toast({
-        title: "Erro ao Salvar",
-        description: state.message,
-        variant: "destructive",
-      });
-    }
-  }, [state, router, toast]);
+// A página agora é um Server Component
+export default async function AdminNovoPacientePage() {
+  const cookieStore = cookies();
+  const token = cookieStore.get('adminSessionToken')?.value;
+
+  if (!token) {
+    return <p>Não autorizado.</p>;
+  }
+
+  const psicologos = await getPsicologos(token);
 
   return (
     <Card className="w-full max-w-2xl">
@@ -66,48 +54,13 @@ export default function AdminNovoPacientePage() {
               Adicionar Novo Paciente
             </CardTitle>
             <CardDescription>
-              Preencha os detalhes abaixo para cadastrar um novo paciente.
+              Preencha os detalhes e vincule o paciente a um psicólogo.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <form action={formAction}>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome Completo</Label>
-              <Input id="nome" name="nome" placeholder="Ex: Ana Silva" />
-              {state.errors?.nome && <p className="text-sm font-medium text-destructive">{state.errors.nome[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="data_nascimento">Data de Nascimento</Label>
-              <Input id="data_nascimento" name="data_nascimento" type="date" />
-              {state.errors?.data_nascimento && <p className="text-sm font-medium text-destructive">{state.errors.data_nascimento[0]}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email (Opcional)</Label>
-              <Input id="email" name="email" type="email" placeholder="paciente@email.com" />
-              {state.errors?.email && <p className="text-sm font-medium text-destructive">{state.errors.email[0]}</p>}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone (Opcional)</Label>
-              <Input id="telefone" name="telefone" placeholder="(21) 99999-8888" />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="endereco">Endereço (Opcional)</Label>
-            <Textarea id="endereco" name="endereco" placeholder="Ex: Rua das Flores, 123..." />
-          </div>
-
-          <div className="flex justify-end pt-4">
-            <SubmitButton />
-          </div>
-        </CardContent>
-      </form>
+      {/* Passamos a lista de psicólogos para o formulário (Client Component) */}
+      <NovoPacienteForm psicologos={psicologos} />
     </Card>
   );
 }

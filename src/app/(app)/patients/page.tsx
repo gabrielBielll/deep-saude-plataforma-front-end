@@ -54,7 +54,7 @@ export default function PatientsPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="font-headline text-3xl">Diretório de Pacientes</CardTitle>
+              <CardTitle className="font-headline text-3xl">Meus Pacientes (v2 - Real)</CardTitle>
               <CardDescription className="text-lg text-muted-foreground">
                 Gerencie os perfis, anotações e documentos de seus pacientes.
               </CardDescription>

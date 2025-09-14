@@ -1,66 +1,58 @@
 import React from 'react';
 import { cookies } from 'next/headers';
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, UserPlus } from "lucide-react";
-import NovoPacienteForm from './NovoPacienteForm'; // Criaremos este componente cliente separado
+import ClientComponent from './ClientComponent'; // Vamos criar este componente a seguir
 
-// Interface para os dados do psicólogo
-interface Psicologo {
+// Definindo o tipo de dados para um paciente (deve corresponder ao que a API retorna)
+interface Paciente {
   id: string;
   nome: string;
+  email: string | null;
+  telefone: string | null;
+  data_nascimento: string | null; // Datas virão como string
+  endereco: string | null;
 }
 
-// Função para buscar os psicólogos no servidor
-async function getPsicologos(token: string): Promise<Psicologo[]> {
-  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/psicologos`;
+// Função para buscar os dados da API no servidor
+async function getPacientes(token: string): Promise<Paciente[] | { error: string }> {
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`;
   try {
     const response = await fetch(apiUrl, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      cache: 'no-store',
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      cache: 'no-store', // Importante para não usar dados em cache
     });
-    if (!response.ok) return [];
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.erro || 'Falha ao buscar os dados dos pacientes.');
+    }
     return response.json();
-  } catch (error) {
-    console.error("Erro ao buscar psicólogos:", error);
-    return [];
+  } catch (error: any) {
+    console.error("Erro ao buscar pacientes:", error);
+    return { error: error.message };
   }
 }
 
-// A página agora é um Server Component
-export default async function AdminNovoPacientePage() {
+
+// A página em si, que executa no servidor
+export default async function AdminPacientesPage() {
   const cookieStore = cookies();
   const token = cookieStore.get('adminSessionToken')?.value;
 
   if (!token) {
-    return <p>Não autorizado.</p>;
+    // Se não houver token, passa um erro para o componente cliente
+    return <ClientComponent initialData={[]} error="Token de autenticação não encontrado." />;
   }
 
-  const psicologos = await getPsicologos(token);
+  const pacientesData = await getPacientes(token);
 
-  return (
-    <Card className="w-full max-w-2xl">
-      <CardHeader>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/admin/pacientes">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-6 w-6" />
-              Adicionar Novo Paciente
-            </CardTitle>
-            <CardDescription>
-              Preencha os detalhes e vincule o paciente a um psicólogo.
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      {/* Passamos a lista de psicólogos para o formulário (Client Component) */}
-      <NovoPacienteForm psicologos={psicologos} />
-    </Card>
-  );
+  if ('error' in pacientesData) {
+    // Se houver um erro na busca, passa o erro para o componente cliente
+    return <ClientComponent initialData={[]} error={pacientesData.error} />;
+  }
+  
+  // Passa os dados buscados com sucesso para o Client Component renderizar a tabela
+  return <ClientComponent initialData={pacientesData} />;
 }

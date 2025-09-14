@@ -53,7 +53,8 @@ export default function NovoPacienteForm({ psicologos }: { psicologos: Psicologo
               <SelectValue placeholder="Selecione um psicólogo (opcional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Nenhum / A designar</SelectItem>
+              {/* CORREÇÃO APLICADA AQUI */}
+              <SelectItem value="none">Nenhum / A designar</SelectItem>
               {psicologos.map((psi) => (
                 <SelectItem key={psi.id} value={psi.id}>
                   {psi.nome}

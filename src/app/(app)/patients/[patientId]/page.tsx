@@ -2,65 +2,73 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react'; // Para obter a sessão do usuário
+import { useSession } from 'next-auth/react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlusCircle, Search, Edit3, Trash2, ArrowRight, Leaf, Loader2, AlertTriangle } from "lucide-react";
 
-// A interface do Paciente, agora refletindo o que a API retorna
 interface Patient {
   id: string;
   nome: string;
   email: string | null;
-  // Adicionamos um campo para a última sessão, que virá dos agendamentos no futuro
-  lastSession?: string; // Por enquanto opcional
+  lastSession?: string;
   avatar_url?: string | null;
 }
 
 export default function PatientsPage() {
-  const { data: session } = useSession(); // Hook para pegar a sessão
+  const { data: session, status } = useSession();
   const [searchTerm, setSearchTerm] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Acessamos o token do nosso backend que foi injetado na sessão pelo next-auth
-    const backendToken = (session as any)?.backendToken;
+    console.log("STATUS DA SESSÃO:", status); // Log 1: Status da sessão
+    
+    if (status === 'authenticated') {
+      const backendToken = (session as any)?.backendToken;
+      console.log("TOKEN DO BACKEND ENCONTRADO:", backendToken ? "Sim" : "Não"); // Log 2: Verifica o token
 
-    if (backendToken) {
-      const fetchPatients = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${backendToken}`,
-            },
-          });
+      if (backendToken) {
+        const fetchPatients = async () => {
+          setLoading(true);
+          setError(null);
+          console.log("Buscando pacientes da API..."); // Log 3: Confirma que o fetch vai começar
+          
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${backendToken}`,
+              },
+            });
 
-          if (!response.ok) {
-            throw new Error('Falha ao buscar os dados dos pacientes.');
+            if (!response.ok) {
+              throw new Error('Falha ao buscar os dados dos pacientes.');
+            }
+            const data = await response.json();
+            console.log("DADOS RECEBIDOS DA API:", data); // Log 4: Mostra os dados recebidos
+            setPatients(data);
+          } catch (err: any) {
+            console.error("ERRO NO FETCH:", err.message); // Log 5: Mostra o erro se houver
+            setError(err.message);
+          } finally {
+            setLoading(false);
           }
-          const data = await response.json();
-          setPatients(data);
-        } catch (err: any) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
+        };
 
-      fetchPatients();
-    } else if (session) {
-      // Se há sessão mas não há token do backend, algo está errado
-      setLoading(false);
-      setError("Não foi possível obter o token de autenticação para o backend.");
+        fetchPatients();
+      } else {
+        setError("Token de autenticação do backend não encontrado na sessão.");
+        setLoading(false);
+      }
+    } else if (status === 'unauthenticated') {
+        setError("Usuário não autenticado.");
+        setLoading(false);
     }
-  }, [session]); // Este efeito roda sempre que a sessão mudar
+  }, [session, status]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -70,6 +78,7 @@ export default function PatientsPage() {
     patient.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ... (o resto do JSX para loading, error e a renderização da lista permanece o mesmo)
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -103,7 +112,6 @@ export default function PatientsPage() {
                 Visualize os perfis de pacientes vinculados a você.
               </CardDescription>
             </div>
-            {/* O psicólogo não adiciona pacientes por aqui, isso é feito pelo admin */}
           </div>
         </CardHeader>
         <CardContent>

@@ -1,52 +1,101 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Search, Edit3, Trash2, ArrowRight, Leaf } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Search, ArrowRight, Leaf, Loader2, AlertTriangle } from "lucide-react";
 
+// Interface do Paciente que esperamos da API
 interface Patient {
   id: string;
-  name: string;
-  lastSession: string;
-  avatarUrl?: string;
-  initials: string;
+  nome: string;
+  email: string | null;
+  lastSession?: string; // Futuramente virá dos agendamentos
+  avatar_url?: string | null;
 }
 
-const mockPatients: Patient[] = [
-  { id: '1', name: 'John Doe', lastSession: '2024-07-15', avatarUrl: 'https://placehold.co/100x100.png?text=JD', initials: 'JD' },
-  { id: '2', name: 'Jane Smith', lastSession: '2024-07-18', initials: 'JS' },
-  { id: '3', name: 'Alice Brown', lastSession: '2024-07-12', avatarUrl: 'https://placehold.co/100x100.png?text=AB', initials: 'AB' },
-  { id: '4', name: 'Bob Green', lastSession: '2024-07-20', initials: 'BG' },
-];
-
 export default function PatientsPage() {
+  const { data: session, status: sessionStatus } = useSession();
   const [searchTerm, setSearchTerm] = useState('');
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Só executa a busca quando a sessão estiver carregada e autenticada
+    if (sessionStatus === 'authenticated') {
+      const backendToken = (session as any)?.backendToken;
+
+      if (backendToken) {
+        const fetchPatients = async () => {
+          setLoading(true);
+          setError(null);
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${backendToken}`,
+              },
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.erro || 'Falha ao buscar os dados dos pacientes.');
+            }
+            const data = await response.json();
+            setPatients(data);
+          } catch (err: any) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchPatients();
+      } else {
+        setError("Token de autenticação do backend não foi encontrado na sessão.");
+        setLoading(false);
+      }
+    } else if (sessionStatus === 'unauthenticated') {
+      setError("Usuário não autenticado.");
+      setLoading(false);
+    }
+    // A dependência `sessionStatus` garante que o efeito rode quando o status mudar de 'loading' para 'authenticated'
+  }, [session, sessionStatus]);
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+  
   const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    patient.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeletePatient = (patientId: string) => {
-    // Mock delete
-    setPatients(prev => prev.filter(p => p.id !== patientId));
-    // Show toast in real app
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Buscando seus pacientes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><AlertTriangle/> Erro ao Carregar Dados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -54,16 +103,12 @@ export default function PatientsPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
+              {/* Mantive o (v2 - Real) para nossa verificação final */}
               <CardTitle className="font-headline text-3xl">Meus Pacientes (v2 - Real)</CardTitle>
               <CardDescription className="text-lg text-muted-foreground">
-                Gerencie os perfis, anotações e documentos de seus pacientes.
+                Visualize os perfis de pacientes vinculados a você.
               </CardDescription>
             </div>
-            <Button asChild className="mt-4 sm:mt-0">
-              <Link href="/patients/new">
-                <PlusCircle className="mr-2 h-5 w-5" /> Adicionar Novo Paciente
-              </Link>
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -84,47 +129,18 @@ export default function PatientsPage() {
                 <Card key={patient.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
                   <CardHeader className="flex flex-row items-center space-x-4">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={patient.avatarUrl} alt={patient.name} data-ai-hint="person portrait" />
-                      <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">{patient.initials}</AvatarFallback>
+                      <AvatarImage src={patient.avatar_url || ''} alt={patient.nome} />
+                      <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">{getInitials(patient.nome)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="font-headline text-xl">{patient.name}</CardTitle>
-                      <CardDescription>Última Sessão: {new Date(patient.lastSession).toLocaleDateString('pt-BR')}</CardDescription>
+                      <CardTitle className="font-headline text-xl">{patient.nome}</CardTitle>
+                      {patient.lastSession && <CardDescription>Última Sessão: {new Date(patient.lastSession).toLocaleDateString('pt-BR')}</CardDescription>}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-grow">
-                    {/* Placeholder for more patient info if needed */}
-                    <p className="text-sm text-muted-foreground">Clique para ver perfil detalhado, notas de sessão e documentos.</p>
+                    <p className="text-sm text-muted-foreground">Clique para ver o perfil detalhado e as notas de sessão.</p>
                   </CardContent>
-                  <CardFooter className="flex justify-between items-center pt-4 border-t">
-                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/patients/${patient.id}/edit`}>
-                          <Edit3 className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta ação não pode ser desfeita. Isso excluirá permanentemente o registro do paciente {patient.name}.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeletePatient(patient.id)}>
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                  <CardFooter className="flex justify-end items-center pt-4 border-t">
                     <Button variant="default" size="sm" asChild>
                       <Link href={`/patients/${patient.id}`}>
                         Ver Perfil <ArrowRight className="ml-2 h-4 w-4" />
@@ -139,8 +155,7 @@ export default function PatientsPage() {
               <Leaf className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
               <p className="font-headline text-xl text-muted-foreground">Nenhum paciente encontrado.</p>
               <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Tente um termo de pesquisa diferente ou " : ""}
-                <Link href="/patients/new" className="text-primary hover:underline">adicione um novo paciente</Link>.
+                Ainda não há pacientes vinculados ao seu perfil.
               </p>
             </div>
           )}

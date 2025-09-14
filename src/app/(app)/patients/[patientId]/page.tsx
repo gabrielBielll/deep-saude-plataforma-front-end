@@ -1,286 +1,161 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, use } from 'react';
-import { useParams }   from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react'; // Para obter a sessão do usuário
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { User, FileText, Brain, UploadCloud, CalendarDays, Mail, Phone, MapPin, PlusCircle, Save, ThumbsUp, Wand2, AlertCircle } from "lucide-react";
-import { getSessionNoteInsights, SessionNoteInsightsInput, SessionNoteInsightsOutput } from '@/ai/flows/session-note-insights';
-import { useToast } from "@/hooks/use-toast";
-import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlusCircle, Search, Edit3, Trash2, ArrowRight, Leaf, Loader2, AlertTriangle } from "lucide-react";
 
+// A interface do Paciente, agora refletindo o que a API retorna
 interface Patient {
   id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  dob: string;
-  avatarUrl?: string;
-  initials: string;
-  joinedDate: string;
+  nome: string;
+  email: string | null;
+  // Adicionamos um campo para a última sessão, que virá dos agendamentos no futuro
+  lastSession?: string; // Por enquanto opcional
+  avatar_url?: string | null;
 }
 
-interface SessionNote {
-  id: string;
-  date: string;
-  content: string;
-  insights?: SessionNoteInsightsOutput;
-}
+export default function PatientsPage() {
+  const { data: session } = useSession(); // Hook para pegar a sessão
+  const [searchTerm, setSearchTerm] = useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-interface Document {
-  id: string;
-  name: string;
-  uploadDate: string;
-  url: string; // This would be a GCS URL in a real app
-}
+  useEffect(() => {
+    // Acessamos o token do nosso backend que foi injetado na sessão pelo next-auth
+    const backendToken = (session as any)?.backendToken;
 
-const mockPatient: Patient = {
-  id: '1',
-  name: 'Johnathan Doe',
-  email: 'john.doe@example.com',
-  phone: '+1-555-123-4567',
-  address: '123 Wellness St, Tranquility City, CA 90210',
-  dob: '1985-06-15',
-  avatarUrl: 'https://placehold.co/150x150.png?text=JD',
-  initials: 'JD',
-  joinedDate: '2023-01-10',
-};
+    if (backendToken) {
+      const fetchPatients = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${backendToken}`,
+            },
+          });
 
-const mockNotes: SessionNote[] = [
-  { id: 'n1', date: '2024-07-15', content: 'Paciente relatou sentir-se ansioso com a apresentação no trabalho. Discutimos mecanismos de enfrentamento e exercícios de respiração. Mostrou melhora no humor ao final da sessão.' },
-  { id: 'n2', date: '2024-07-08', content: 'Acompanhamento sobre estressores familiares. Paciente está implementando estratégias de comunicação discutidas anteriormente. Ainda há alguma tensão, mas nota-se progresso.' },
-];
+          if (!response.ok) {
+            throw new Error('Falha ao buscar os dados dos pacientes.');
+          }
+          const data = await response.json();
+          setPatients(data);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-const mockDocuments: Document[] = [
-  { id: 'd1', name: 'Formulário de Admissão.pdf', uploadDate: '2023-01-10', url: '#' },
-  { id: 'd2', name: 'Carta de Encaminhamento.docx', uploadDate: '2023-02-20', url: '#' },
-];
-
-
-export default function PatientDetailPage() {
-  const params = useParams();
-  const patientId = params.patientId as string;
-  const { toast } = useToast();
-
-  // In a real app, fetch patient data based on patientId
-  const [patient, setPatient] = useState<Patient>(mockPatient);
-  const [sessionNotes, setSessionNotes] = useState<SessionNote[]>(mockNotes);
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
-  const [newNoteContent, setNewNoteContent] = useState('');
-  const [analyzingNoteId, setAnalyzingNoteId] = useState<string | null>(null);
-
-  const handleAnalyzeNote = async (note: SessionNote) => {
-    setAnalyzingNoteId(note.id);
-    try {
-      const input: SessionNoteInsightsInput = { sessionNotes: note.content };
-      const insights = await getSessionNoteInsights(input);
-      setSessionNotes(prevNotes => 
-        prevNotes.map(n => n.id === note.id ? { ...n, insights } : n)
-      );
-      toast({
-        title: "Análise Concluída",
-        description: "Insights da anotação de sessão gerados com sucesso.",
-        variant: "default",
-        className: "bg-primary text-primary-foreground"
-      });
-    } catch (error) {
-      console.error("Erro ao analisar anotação:", error);
-      toast({
-        title: "Falha na Análise",
-        description: "Não foi possível gerar insights para a anotação da sessão.",
-        variant: "destructive",
-      });
-    } finally {
-      setAnalyzingNoteId(null);
+      fetchPatients();
+    } else if (session) {
+      // Se há sessão mas não há token do backend, algo está errado
+      setLoading(false);
+      setError("Não foi possível obter o token de autenticação para o backend.");
     }
-  };
+  }, [session]); // Este efeito roda sempre que a sessão mudar
 
-  const handleAddNote = () => {
-    if (!newNoteContent.trim()) {
-      toast({ title: "Anotação Vazia", description: "Não é possível salvar uma anotação vazia.", variant: "destructive" });
-      return;
-    }
-    const newNote: SessionNote = {
-      id: `n${sessionNotes.length + 1}`,
-      date: new Date().toISOString().split('T')[0],
-      content: newNoteContent,
-    };
-    setSessionNotes([newNote, ...sessionNotes]);
-    setNewNoteContent('');
-    toast({ title: "Anotação Salva", description: "Nova anotação de sessão adicionada com sucesso.", className: "bg-primary text-primary-foreground" });
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   };
   
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Mock upload
-      const newDoc: Document = {
-        id: `d${documents.length + 1}`,
-        name: file.name,
-        uploadDate: new Date().toISOString().split('T')[0],
-        url: '#', // In real app, use signed URL from GCS
-      };
-      setDocuments([newDoc, ...documents]);
-      toast({ title: "Arquivo Carregado", description: `${file.name} foi adicionado. (Simulado)`, className: "bg-primary text-primary-foreground" });
-    }
-  };
+  const filteredPatients = patients.filter(patient =>
+    patient.nome.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg text-muted-foreground">Buscando seus pacientes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><AlertTriangle/> Erro ao Carregar Dados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <Card className="shadow-lg">
-        <CardHeader className="flex flex-col md:flex-row items-start md:items-center gap-4">
-          <Avatar className="h-24 w-24 border-2 border-primary">
-            <AvatarImage src={patient.avatarUrl} alt={patient.name} data-ai-hint="person portrait"/>
-            <AvatarFallback className="bg-secondary text-secondary-foreground font-bold text-3xl">{patient.initials}</AvatarFallback>
-          </Avatar>
-          <div>
-            <CardTitle className="font-headline text-3xl">{patient.name}</CardTitle>
-            <CardDescription className="text-lg text-muted-foreground">ID do Paciente: {patient.id}</CardDescription>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-2">
-              <span className="flex items-center"><Mail className="h-4 w-4 mr-1 text-primary" /> {patient.email}</span>
-              <span className="flex items-center"><Phone className="h-4 w-4 mr-1 text-primary" /> {patient.phone}</span>
-              <span className="flex items-center"><CalendarDays className="h-4 w-4 mr-1 text-primary" /> Entrou em: {new Date(patient.joinedDate).toLocaleDateString('pt-BR')}</span>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="font-headline text-3xl">Meus Pacientes</CardTitle>
+              <CardDescription className="text-lg text-muted-foreground">
+                Visualize os perfis de pacientes vinculados a você.
+              </CardDescription>
             </div>
+            {/* O psicólogo não adiciona pacientes por aqui, isso é feito pelo admin */}
           </div>
         </CardHeader>
+        <CardContent>
+          <div className="mb-6 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Pesquisar pacientes por nome..."
+              className="pl-10 w-full md:w-1/2"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {filteredPatients.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPatients.map((patient) => (
+                <Card key={patient.id} className="shadow-md hover:shadow-lg transition-shadow flex flex-col">
+                  <CardHeader className="flex flex-row items-center space-x-4">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={patient.avatar_url || ''} alt={patient.nome} />
+                      <AvatarFallback className="bg-secondary text-secondary-foreground font-semibold">{getInitials(patient.nome)}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="font-headline text-xl">{patient.nome}</CardTitle>
+                      {patient.lastSession && <CardDescription>Última Sessão: {new Date(patient.lastSession).toLocaleDateString('pt-BR')}</CardDescription>}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground">Clique para ver o perfil detalhado e as notas de sessão.</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-end items-center pt-4 border-t">
+                    <Button variant="default" size="sm" asChild>
+                      <Link href={`/patients/${patient.id}`}>
+                        Ver Perfil <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <Leaf className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
+              <p className="font-headline text-xl text-muted-foreground">Nenhum paciente encontrado.</p>
+              <p className="text-sm text-muted-foreground">
+                Ainda não há pacientes vinculados ao seu perfil.
+              </p>
+            </div>
+          )}
+        </CardContent>
       </Card>
-
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
-          <TabsTrigger value="profile" className="py-3"><User className="mr-2 h-5 w-5" />Detalhes do Perfil</TabsTrigger>
-          <TabsTrigger value="notes" className="py-3"><FileText className="mr-2 h-5 w-5" />Anotações da Sessão</TabsTrigger>
-          <TabsTrigger value="documents" className="py-3"><UploadCloud className="mr-2 h-5 w-5" />Documentos</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Informações do Paciente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div><Label htmlFor="name">Nome Completo</Label><Input id="name" value={patient.name} readOnly /></div>
-                <div><Label htmlFor="dob">Data de Nascimento</Label><Input id="dob" value={new Date(patient.dob).toLocaleDateString('pt-BR')} readOnly /></div>
-                <div><Label htmlFor="email">Endereço de E-mail</Label><Input id="email" type="email" value={patient.email} readOnly /></div>
-                <div><Label htmlFor="phone">Número de Telefone</Label><Input id="phone" type="tel" value={patient.phone} readOnly /></div>
-                <div className="md:col-span-2"><Label htmlFor="address">Endereço</Label><Textarea id="address" value={patient.address} readOnly className="h-24" /></div>
-              </div>
-              <Button variant="outline"><User className="mr-2 h-4 w-4" /> Editar Perfil (Espaço reservado)</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notes">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Anotações da Sessão</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="new-note" className="text-lg">Adicionar Nova Anotação</Label>
-                <Textarea
-                  id="new-note"
-                  value={newNoteContent}
-                  onChange={(e) => setNewNoteContent(e.target.value)}
-                  placeholder={`Registre anotações para a sessão de ${new Date().toLocaleDateString('pt-BR')}...`}
-                  className="min-h-[120px]"
-                />
-                <Button onClick={handleAddNote}><Save className="mr-2 h-4 w-4"/>Salvar Anotação</Button>
-              </div>
-              <hr/>
-              <h3 className="font-headline text-xl mt-4">Anotações Anteriores</h3>
-              {sessionNotes.length > 0 ? (
-                <ScrollArea className="h-[400px] pr-4">
-                  <div className="space-y-4">
-                  {sessionNotes.map(note => (
-                    <Card key={note.id} className="bg-background/70">
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-md font-semibold">Sessão: {new Date(note.date).toLocaleDateString('pt-BR')}</CardTitle>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleAnalyzeNote(note)}
-                            disabled={analyzingNoteId === note.id}
-                          >
-                            {analyzingNoteId === note.id ? <Wand2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
-                            {analyzingNoteId === note.id ? "Analisando..." : "Insights de IA"}
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="whitespace-pre-wrap text-sm">{note.content}</p>
-                        {note.insights && (
-                          <div className="mt-4 p-3 border rounded-md bg-secondary/30 space-y-2">
-                            <h4 className="font-semibold text-sm text-primary">Insights Gerados por IA:</h4>
-                            <div><strong>Palavras-chave:</strong> <span className="text-xs">{note.insights.keywords.join(', ')}</span></div>
-                            <div><strong>Temas:</strong> <span className="text-xs">{note.insights.themes.join(', ')}</span></div>
-                            <div><strong>Insights Potenciais:</strong>
-                              <ul className="list-disc list-inside text-xs">
-                                {note.insights.insights.map((insight, i) => <li key={i}>{insight}</li>)}
-                              </ul>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                  </div>
-                </ScrollArea>
-              ) : (
-                <p className="text-muted-foreground">Nenhuma anotação de sessão registrada ainda.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="documents">
-          <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Documentos do Paciente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label htmlFor="file-upload" className="block text-lg mb-2">Carregar Novo Documento</Label>
-                <div className="flex items-center space-x-2">
-                  <Input id="file-upload" type="file" onChange={handleFileUpload} className="w-auto" />
-                  {/* <Button><UploadCloud className="mr-2 h-4 w-4" /> Upload (Placeholder)</Button> */}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Tamanho máximo do arquivo: 5MB. Tipos permitidos: PDF, DOCX, JPG, PNG.</p>
-              </div>
-               <hr/>
-              <h3 className="font-headline text-xl mt-4">Documentos Carregados</h3>
-              {documents.length > 0 ? (
-                <ul className="space-y-3">
-                  {documents.map(doc => (
-                    <li key={doc.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-secondary/20">
-                      <div>
-                        <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">{doc.name}</a>
-                        <p className="text-xs text-muted-foreground">Carregado em: {new Date(doc.uploadDate).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={doc.url} download={doc.name} target="_blank">Baixar</a>
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                 <div className="text-center py-6">
-                  <Image src="https://placehold.co/200x150.png" alt="Nenhum documento" width={150} height={100} className="mx-auto rounded-md mb-2" data-ai-hint="empty folder document" />
-                  <p className="text-muted-foreground">Nenhum documento carregado para este paciente ainda.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
-import { cookies } from 'next/headers';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Importar authOptions
 import { notFound } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, FileText, Brain, UploadCloud, CalendarDays, Mail, Phone, MapPin } from "lucide-react";
+import { User, FileText, UploadCloud, CalendarDays, Mail, Phone } from "lucide-react";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image';
 
 // --- DEFINIÇÃO DOS TIPOS DE DADOS ---
 interface Patient {
@@ -24,18 +24,8 @@ interface Patient {
   data_cadastro: string;
 }
 
-interface SessionNote {
-  id: string;
-  date: string;
-  content: string;
-}
-
-interface Document {
-  id: string;
-  name: string;
-  uploadDate: string;
-  url: string;
-}
+interface SessionNote { id: string; date: string; content: string; }
+interface Document { id: string; name: string; uploadDate: string; url: string; }
 
 // --- FUNÇÃO PARA BUSCAR OS DADOS DO PACIENTE NA API ---
 async function getPatientDetails(patientId: string, token: string): Promise<Patient | null> {
@@ -46,12 +36,12 @@ async function getPatientDetails(patientId: string, token: string): Promise<Pati
       headers: { 'Authorization': `Bearer ${token}` },
       cache: 'no-store',
     });
-
-    if (!response.ok) {
-      if (response.status === 404) return null; // Paciente não encontrado
-      throw new Error("Falha ao buscar dados do paciente.");
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (data.data_nascimento) {
+      data.data_nascimento = new Date(data.data_nascimento).toISOString().split('T')[0];
     }
-    return response.json();
+    return data;
   } catch (error) {
     console.error("Erro na API ao buscar detalhes do paciente:", error);
     return null;
@@ -60,29 +50,28 @@ async function getPatientDetails(patientId: string, token: string): Promise<Pati
 
 // --- DADOS MOCKADOS (COMO SOLICITADO) ---
 const mockNotes: SessionNote[] = [
-  { id: 'n1', date: '2024-07-15', content: 'Paciente relatou sentir-se ansioso com a apresentação no trabalho. Discutimos mecanismos de enfrentamento e exercícios de respiração. Mostrou melhora no humor ao final da sessão.' },
-  { id: 'n2', date: '2024-07-08', content: 'Acompanhamento sobre estressores familiares. Paciente está implementando estratégias de comunicação discutidas anteriormente. Ainda há alguma tensão, mas nota-se progresso.' },
+    { id: 'n1', date: '2024-07-15', content: 'Paciente relatou sentir-se ansioso...' },
+    { id: 'n2', date: '2024-07-08', content: 'Acompanhamento sobre estressores familiares...' },
 ];
-
 const mockDocuments: Document[] = [
-  { id: 'd1', name: 'Formulário de Admissão.pdf', uploadDate: '2023-01-10', url: '#' },
-  { id: 'd2', name: 'Carta de Encaminhamento.docx', uploadDate: '2023-02-20', url: '#' },
+    { id: 'd1', name: 'Formulário de Admissão.pdf', uploadDate: '2023-01-10', url: '#' },
+    { id: 'd2', name: 'Carta de Encaminhamento.docx', uploadDate: '2023-02-20', url: '#' },
 ];
 
-// --- O COMPONENTE DA PÁGINA (AGORA UM SERVER COMPONENT) ---
+// --- O COMPONENTE DA PÁGINA (SERVER COMPONENT) ---
 export default async function PatientDetailPage({ params }: { params: { patientId: string } }) {
-  const cookieStore = cookies();
-  // Usamos o cookie do admin por enquanto, mas na tela da psi usaria o token da sessão dela
-  const token = cookieStore.get('adminSessionToken')?.value || (await import('next-auth/next').then(mod => mod.getServerSession()))?.backendToken;
+  // CORREÇÃO: Busca a sessão de forma robusta no servidor
+  const session = await getServerSession(authOptions);
+  const token = (session as any)?.backendToken;
   
   if (!token) {
-    return <p>Não autorizado.</p>;
+    return <p className="p-4">Sessão inválida ou não encontrada. Por favor, faça login novamente.</p>;
   }
 
   const patient = await getPatientDetails(params.patientId, token);
 
   if (!patient) {
-    notFound(); // Se a API não encontrar o paciente, exibe a página 404 do Next.js
+    notFound();
   }
 
   const getInitials = (name: string) => {
@@ -117,12 +106,9 @@ export default async function PatientDetailPage({ params }: { params: { patientI
           <TabsTrigger value="documents" className="py-3"><UploadCloud className="mr-2 h-5 w-5" />Documentos</TabsTrigger>
         </TabsList>
 
-        {/* ABA DE PERFIL COM DADOS REAIS */}
         <TabsContent value="profile">
           <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Informações do Paciente</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="font-headline text-2xl">Informações do Paciente</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div><Label htmlFor="name">Nome Completo</Label><Input id="name" value={patient.nome} readOnly /></div>
@@ -131,17 +117,14 @@ export default async function PatientDetailPage({ params }: { params: { patientI
                 <div><Label htmlFor="phone">Número de Telefone</Label><Input id="phone" type="tel" value={patient.telefone || 'N/A'} readOnly /></div>
                 <div className="md:col-span-2"><Label htmlFor="address">Endereço</Label><Textarea id="address" value={patient.endereco || 'N/A'} readOnly className="h-24" /></div>
               </div>
-              <Button variant="outline"><User className="mr-2 h-4 w-4" /> Editar Perfil (Espaço reservado)</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ABA DE ANOTAÇÕES COM DADOS MOCKADOS */}
         <TabsContent value="notes">
           <Card className="shadow-md">
             <CardHeader><CardTitle className="font-headline text-2xl">Anotações da Sessão (Mock)</CardTitle></CardHeader>
             <CardContent>
-                {/* Aqui entrará a lógica real de anotações e IA no futuro */}
                 <ScrollArea className="h-[400px] pr-4">
                   <div className="space-y-4">
                   {mockNotes.map(note => (
@@ -156,12 +139,10 @@ export default async function PatientDetailPage({ params }: { params: { patientI
           </Card>
         </TabsContent>
 
-        {/* ABA DE DOCUMENTOS COM DADOS MOCKADOS */}
         <TabsContent value="documents">
           <Card className="shadow-md">
             <CardHeader><CardTitle className="font-headline text-2xl">Documentos do Paciente (Mock)</CardTitle></CardHeader>
             <CardContent>
-                {/* Aqui entrará a lógica real de upload no futuro */}
                 <ul className="space-y-3">
                   {mockDocuments.map(doc => (
                     <li key={doc.id} className="flex items-center justify-between p-3 border rounded-md hover:bg-secondary/20">

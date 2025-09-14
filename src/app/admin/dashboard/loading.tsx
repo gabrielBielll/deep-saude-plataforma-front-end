@@ -1,7 +1,6 @@
 import React from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Users, BriefcaseMedical, CalendarClock, DollarSign } from 'lucide-react'; // Ícones para consistência visual
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"; // CardFooter adicionado aqui
 
 export default function AdminDashboardLoading() {
   return (
@@ -23,8 +22,6 @@ export default function AdminDashboardLoading() {
               <Skeleton className="h-7 w-24 mb-1" /> {/* Skeleton para o valor principal */}
               <Skeleton className="h-3 w-32" />    {/* Skeleton para a descrição do card */}
             </CardContent>
-            {/* Opcional: Skeleton para o footer do card se houver */}
-            {/* <CardFooter> <Skeleton className="h-3 w-28" /> </CardFooter> */}
           </Card>
         ))}
       </div>
@@ -58,7 +55,6 @@ export default function AdminDashboardLoading() {
             </CardHeader>
             <CardContent>
               <Skeleton className="h-7 w-32 mb-1" />
-              {/* <Skeleton className="h-3 w-24" />  // Se tivesse descrição */}
             </CardContent>
             <CardFooter>
                 <Skeleton className="h-3 w-36" />

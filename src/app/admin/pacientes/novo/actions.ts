@@ -10,37 +10,68 @@ const pacienteSchema = z.object({
   telefone: z.string().optional(),
   data_nascimento: z.string().optional(),
   endereco: z.string().optional(),
-  psicologo_id: z.string().optional(), // Adicionar psicologo_id
+  psicologo_id: z.string().nullable().optional(), // Atualizado para aceitar null
 });
 
-// ... (FormState permanece o mesmo)
 export type FormState = {
   message: string;
-  errors?: { nome?: string[]; email?: string[]; };
+  errors?: {
+    nome?: string[];
+    email?: string[];
+  };
   success: boolean;
 };
 
-export async function createPaciente(prevState: FormState, formData: FormData): Promise<FormState> {
+export async function createPaciente(
+  prevState: FormState,
+  formData: FormData
+): Promise<FormState> {
   const rawFormData = Object.fromEntries(formData.entries());
 
-  // Tratar campo vazio do select
-  if (rawFormData.psicologo_id === "") {
+  // CORREÇÃO APLICADA AQUI
+  // Trata o campo "nenhum" do select, convertendo para null
+  if (rawFormData.psicologo_id === "none") {
     rawFormData.psicologo_id = null;
   }
   
   const validatedFields = pacienteSchema.safeParse(rawFormData);
 
-  // ... (resto da função permanece o mesmo até o body do fetch)
+  if (!validatedFields.success) {
+    return {
+      message: "Erro de validação.",
+      errors: validatedFields.error.flatten().fieldErrors,
+      success: false,
+    };
+  }
 
-  // Dentro do `try`, modifique o `body` do `fetch`
-  const response = await fetch(apiUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
-    body: JSON.stringify(validatedFields.data), // Agora envia o psicologo_id
-  });
+  const token = cookies().get("adminSessionToken")?.value;
+  if (!token) {
+    return { message: "Erro de autenticação.", success: false };
+  }
 
-  // ... (resto da função permanece o mesmo)
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/pacientes`;
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify(validatedFields.data),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { message: data.erro || "Falha ao criar paciente.", success: false };
+    }
+
+    revalidatePath("/admin/pacientes");
+    return { message: "Paciente criado com sucesso!", success: true };
+
+  } catch (error) {
+    console.error("Erro de rede ao criar paciente:", error);
+    return { message: "Erro de conexão com o servidor.", success: false };
+  }
 }
